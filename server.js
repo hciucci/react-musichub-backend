@@ -6,7 +6,14 @@ const app = express();
 
 // Middleware for parsing JSON
 app.use(express.json());
-app.use(cors());
+
+// Enable CORS with specific origin
+app.use(
+  cors({
+    origin: "https://hciucci.github.io", // Your GitHub Pages URL
+    methods: ["GET", "POST"],
+  })
+);
 
 // Hardcoded reviews
 const originalReviews = [
