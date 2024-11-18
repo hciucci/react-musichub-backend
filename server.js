@@ -137,12 +137,12 @@ app.post("/reviews", (req, res) => {
   res.status(201).send(newReview);
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 
 if (!PORT) {
   throw new Error("Environment variable PORT is not set. The server cannot start.");
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
