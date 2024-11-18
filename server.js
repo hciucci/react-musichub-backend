@@ -130,8 +130,7 @@ app.post("/reviews", (req, res) => {
   res.status(201).send(newReview);
 });
 
-const PORT = process.env.PORT;
-
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
