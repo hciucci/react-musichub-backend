@@ -7,13 +7,18 @@ const app = express();
 // Middleware for parsing JSON
 app.use(express.json());
 
-// Enable CORS with specific origin
-app.use(
-  cors({
-    origin: "https://hciucci.github.io", // Your GitHub Pages URL
-    methods: ["GET", "POST"],
-  })
-);
+// Enable CORS with specific origin and additional methods
+const corsOptions = {
+  origin: "https://hciucci.github.io", // Your GitHub Pages URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests properly (important for PUT/DELETE)
+app.options('*', cors(corsOptions));
 
 // Hardcoded reviews
 const originalReviews = [
@@ -135,6 +140,35 @@ app.post("/reviews", (req, res) => {
   const newReview = { id: reviews.length + 1, ...req.body };
   reviews.push(newReview);
   res.status(201).send(newReview);
+});
+
+// PUT to update a review
+app.put("/reviews/:id", (req, res) => {
+  const { id } = req.params;
+  const { error } = reviewSchema.validate(req.body);
+  if (error) {
+    return res.status(400).send({ message: error.details[0].message });
+  }
+
+  const reviewIndex = reviews.findIndex((review) => review.id == id);
+  if (reviewIndex === -1) {
+    return res.status(404).send({ message: "Review not found" });
+  }
+
+  reviews[reviewIndex] = { id: parseInt(id), ...req.body };
+  res.status(200).send(reviews[reviewIndex]);
+});
+
+// DELETE to remove a review
+app.delete("/reviews/:id", (req, res) => {
+  const { id } = req.params;
+  const reviewIndex = reviews.findIndex((review) => review.id == id);
+  if (reviewIndex === -1) {
+    return res.status(404).send({ message: "Review not found" });
+  }
+
+  const deletedReview = reviews.splice(reviewIndex, 1);
+  res.status(200).send(deletedReview[0]);
 });
 
 const PORT = process.env.PORT || 3001;
