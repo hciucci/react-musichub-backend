@@ -24,8 +24,7 @@ const originalReviews = [
     artist: "Benjamin Tissot",
     reviewer: "Jane Doe",
     rating: 4,
-    review:
-      '"Dreams" is a relaxing, chill-out track perfect for unwinding after a long day. The laid-back mood and calming melodies are a hit!',
+    review: '"Dreams" is a relaxing, chill-out track perfect for unwinding after a long day. The laid-back mood and calming melodies are a hit!'
   },
   {
     id: 2,
@@ -33,8 +32,7 @@ const originalReviews = [
     artist: "Benjamin Lazzarus",
     reviewer: "John Smith",
     rating: 4,
-    review:
-      '"Slow Life" offers an intriguing blend of epic royalty-free music, featuring piano and strings for a serene atmosphere. Perfect for videos!',
+    review: '"Slow Life" offers an intriguing blend of epic royalty-free music, featuring piano and strings for a serene atmosphere. Perfect for videos!'
   },
   {
     id: 3,
@@ -42,8 +40,7 @@ const originalReviews = [
     artist: "Yunior Arronte",
     reviewer: "Alice Johnson",
     rating: 4,
-    review:
-      '"Fireside Chat" has a warm, jazzy vibe with soothing instruments that create the perfect backdrop for a cozy evening. Highly recommended!',
+    review: '"Fireside Chat" has a warm, jazzy vibe with soothing instruments that create the perfect backdrop for a cozy evening. Highly recommended!'
   },
   {
     id: 4,
@@ -51,8 +48,7 @@ const originalReviews = [
     artist: "Roman Senyk",
     reviewer: "Mark Wilson",
     rating: 3,
-    review:
-      '"Dawn of Change" brings emotional cinematic royalty-free music with strings and percussion that evoke powerful feelings of transformation.',
+    review: '"Dawn of Change" brings emotional cinematic royalty-free music with strings and percussion that evoke powerful feelings of transformation.'
   },
   {
     id: 5,
@@ -60,8 +56,7 @@ const originalReviews = [
     artist: "Hugo Dujardin",
     reviewer: "Sarah Clark",
     rating: 4,
-    review:
-      '"Hope" is a beautiful, touching piano track that will resonate with anyone who enjoys calming piano solos. It\'s short but very sweet.',
+    review: '"Hope" is a beautiful, touching piano track that will resonate with anyone who enjoys calming piano solos. It\'s short but very sweet.'
   },
   {
     id: 6,
@@ -69,8 +64,7 @@ const originalReviews = [
     artist: "Aventure",
     reviewer: "Chris Thompson",
     rating: 5,
-    review:
-      '"Yesterday" is a standout! The relaxing synths and drums make it a great choice for unwinding and creating a serene atmosphere. A must-listen.',
+    review: '"Yesterday" is a standout! The relaxing synths and drums make it a great choice for unwinding and creating a serene atmosphere. A must-listen.'
   },
   {
     id: 7,
@@ -78,8 +72,7 @@ const originalReviews = [
     artist: "Aventure",
     reviewer: "Rachel Evans",
     rating: 3,
-    review:
-      '"Hearty" has a touching, soft feel, with relaxing synths and drums that fit perfectly for emotional scenes. Aventure delivers again.',
+    review: '"Hearty" has a touching, soft feel, with relaxing synths and drums that fit perfectly for emotional scenes. Aventure delivers again.'
   },
   {
     id: 8,
@@ -87,8 +80,7 @@ const originalReviews = [
     artist: "Aventure",
     reviewer: "Michael Brown",
     rating: 4,
-    review:
-      '"Floating Garden" is a dreamy lo-fi track that features bass and electric guitar. Its mellow vibes are perfect for chilling out.',
+    review: '"Floating Garden" is a dreamy lo-fi track that features bass and electric guitar. Its mellow vibes are perfect for chilling out.'
   },
   {
     id: 9,
@@ -96,8 +88,7 @@ const originalReviews = [
     artist: "Lunar Years",
     reviewer: "Laura Green",
     rating: 4,
-    review:
-      '"Angels By My Side" is a beautiful, touching folk track featuring acoustic guitar and heartfelt melodies. It\'s a deeply emotional song.',
+    review: '"Angels By My Side" is a beautiful, touching folk track featuring acoustic guitar and heartfelt melodies. It\'s a deeply emotional song.'
   },
   {
     id: 10,
@@ -105,64 +96,56 @@ const originalReviews = [
     artist: "Yunior Arronte",
     reviewer: "Tom Harris",
     rating: 5,
-    review:
-      '"Moonlight Drive" is a slow, lo-fi relaxing track with calming piano, synth, drums, and bass. Perfect for a late-night drive or chill session.',
-  },
+    review: '"Moonlight Drive" is a slow, lo-fi relaxing track with calming piano, synth, drums, and bass. Perfect for a late-night drive or chill session.'
+  }
 ];
 
 let reviews = [...originalReviews];
 
 const reviewSchema = Joi.object({
+  id: Joi.number().optional(),
   title: Joi.string().required(),
   artist: Joi.string().required(),
   reviewer: Joi.string().required(),
   rating: Joi.number().min(1).max(5).required(),
-  review: Joi.string().required(),
+  review: Joi.string().required()
 });
 
-// GET to fetch reviews
 app.get("/reviews", (req, res) => {
   res.send(reviews);
 });
 
-// POST to add a review
 app.post("/reviews", (req, res) => {
   console.log("Received data:", req.body);
   const { error } = reviewSchema.validate(req.body);
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
   }
-
   const newReview = { id: reviews.length + 1, ...req.body };
   reviews.push(newReview);
   res.status(201).send(newReview);
 });
 
-// PUT to update a review
 app.put("/reviews/:id", (req, res) => {
   const { id } = req.params;
   const { error } = reviewSchema.validate(req.body);
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
   }
-
   const reviewIndex = reviews.findIndex((review) => review.id == id);
   if (reviewIndex === -1) {
     return res.status(404).send({ message: "Review not found" });
   }
-
   reviews[reviewIndex] = { id: parseInt(id), ...req.body };
   res.status(200).send(reviews[reviewIndex]);
 });
 
-// DELETE to remove a review
 app.delete("/reviews/:id", (req, res) => {
   const { id } = req.params;
   const reviewIndex = reviews.findIndex((review) => review.id == id);
   if (reviewIndex === -1) {
     return res.status(404).send({ message: "Review not found" });
   }
-
   const deletedReview = reviews.splice(reviewIndex, 1);
   res.status(200).send(deletedReview[0]);
 });
