@@ -4,12 +4,10 @@ const cors = require("cors");
 
 const app = express();
 
-// Middleware for parsing JSON
 app.use(express.json());
 
-// Enable CORS with specific origin and additional methods
 const corsOptions = {
-  origin: "https://hciucci.github.io", // Your GitHub Pages URL
+  origin: "https://hciucci.github.io",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -17,10 +15,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Handle preflight requests properly (important for PUT/DELETE)
 app.options('*', cors(corsOptions));
 
-// Hardcoded reviews
 const originalReviews = [
   {
     id: 1,
