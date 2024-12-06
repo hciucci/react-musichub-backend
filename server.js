@@ -105,12 +105,17 @@ app.put("/reviews/:id", async (req, res) => {
 app.delete("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
+  if (!id) {
+    return res.status(400).send({ message: "Invalid ID." });
+  }
+
   try {
-    const deletedReview = await Review.findByIdAndDelete(id);
-    if (!deletedReview) {
-      return res.status(404).send({ message: "Review not found" });
+    const reviewIndex = reviews.findIndex((review) => review.id == id);
+    if (reviewIndex === -1) {
+      return res.status(404).send({ message: "Review not found." });
     }
-    res.send(deletedReview);
+    const deletedReview = reviews.splice(reviewIndex, 1);
+    res.status(200).send(deletedReview[0]);
   } catch (err) {
     res.status(500).send({ message: "Error deleting the review." });
   }
