@@ -1,11 +1,13 @@
 const express = require("express");
 const Joi = require("joi");
 const cors = require("cors");
+const mongoose = require("mongoose"); // import mongoose
 
 const app = express();
 
 app.use(express.json());
 
+// setup cors
 const corsOptions = {
   origin: "https://hciucci.github.io",
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -14,148 +16,116 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
-app.options('*', cors(corsOptions));
+// connect to mongodb
+mongoose
+  .connect("mongodb+srv://hadenmciucci:lZXBXflUn1iFDrhm@cluster0.2zwpk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("connected to mongodb"))
+  .catch((err) => console.error("mongodb connection error:", err));
 
-const originalReviews = [
-  {
-    id: 1,
-    title: "Dreams",
-    artist: "Benjamin Tissot",
-    reviewer: "Jane Doe",
-    rating: 4,
-    review: '"Dreams" is a relaxing, chill-out track perfect for unwinding after a long day. The laid-back mood and calming melodies are a hit!'
-  },
-  {
-    id: 2,
-    title: "Slow Life",
-    artist: "Benjamin Lazzarus",
-    reviewer: "John Smith",
-    rating: 4,
-    review: '"Slow Life" offers an intriguing blend of epic royalty-free music, featuring piano and strings for a serene atmosphere. Perfect for videos!'
-  },
-  {
-    id: 3,
-    title: "Fireside Chat",
-    artist: "Yunior Arronte",
-    reviewer: "Alice Johnson",
-    rating: 4,
-    review: '"Fireside Chat" has a warm, jazzy vibe with soothing instruments that create the perfect backdrop for a cozy evening. Highly recommended!'
-  },
-  {
-    id: 4,
-    title: "Dawn of Change",
-    artist: "Roman Senyk",
-    reviewer: "Mark Wilson",
-    rating: 3,
-    review: '"Dawn of Change" brings emotional cinematic royalty-free music with strings and percussion that evoke powerful feelings of transformation.'
-  },
-  {
-    id: 5,
-    title: "Hope",
-    artist: "Hugo Dujardin",
-    reviewer: "Sarah Clark",
-    rating: 4,
-    review: '"Hope" is a beautiful, touching piano track that will resonate with anyone who enjoys calming piano solos. It\'s short but very sweet.'
-  },
-  {
-    id: 6,
-    title: "Yesterday",
-    artist: "Aventure",
-    reviewer: "Chris Thompson",
-    rating: 5,
-    review: '"Yesterday" is a standout! The relaxing synths and drums make it a great choice for unwinding and creating a serene atmosphere. A must-listen.'
-  },
-  {
-    id: 7,
-    title: "Hearty",
-    artist: "Aventure",
-    reviewer: "Rachel Evans",
-    rating: 3,
-    review: '"Hearty" has a touching, soft feel, with relaxing synths and drums that fit perfectly for emotional scenes. Aventure delivers again.'
-  },
-  {
-    id: 8,
-    title: "Floating Garden",
-    artist: "Aventure",
-    reviewer: "Michael Brown",
-    rating: 4,
-    review: '"Floating Garden" is a dreamy lo-fi track that features bass and electric guitar. Its mellow vibes are perfect for chilling out.'
-  },
-  {
-    id: 9,
-    title: "Angels By My Side",
-    artist: "Lunar Years",
-    reviewer: "Laura Green",
-    rating: 4,
-    review: '"Angels By My Side" is a beautiful, touching folk track featuring acoustic guitar and heartfelt melodies. It\'s a deeply emotional song.'
-  },
-  {
-    id: 10,
-    title: "Moonlight Drive",
-    artist: "Yunior Arronte",
-    reviewer: "Tom Harris",
-    rating: 5,
-    review: '"Moonlight Drive" is a slow, lo-fi relaxing track with calming piano, synth, drums, and bass. Perfect for a late-night drive or chill session.'
+// define the review schema
+const reviewSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  artist: { type: String, required: true },
+  reviewer: { type: String, required: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
+  review: { type: String, required: true },
+  picture: { type: String }, // optional field for picture urls
+  date: { type: Date, default: Date.now }, // add a timestamp
+});
+
+// create the review model
+const Review = mongoose.model("Review", reviewSchema);
+
+// get all reviews
+app.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find();
+    res.send(reviews);
+  } catch (err) {
+    res.status(500).send({ message: "error retrieving reviews." });
   }
-];
-
-let reviews = [...originalReviews];
-
-const reviewSchema = Joi.object({
-  id: Joi.number().optional(),
-  title: Joi.string().required(),
-  artist: Joi.string().required(),
-  reviewer: Joi.string().required(),
-  rating: Joi.number().min(1).max(5).required(),
-  review: Joi.string().required()
 });
 
-app.get("/reviews", (req, res) => {
-  res.send(reviews);
-});
+// add a new review
+app.post("/reviews", async (req, res) => {
+  const { error } = Joi.object({
+    title: Joi.string().required(),
+    artist: Joi.string().required(),
+    reviewer: Joi.string().required(),
+    rating: Joi.number().min(1).max(5).required(),
+    review: Joi.string().required(),
+    picture: Joi.string().optional(),
+  }).validate(req.body);
 
-app.post("/reviews", (req, res) => {
-  console.log("Received data:", req.body);
-  const { error } = reviewSchema.validate(req.body);
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
   }
-  const newReview = { id: reviews.length + 1, ...req.body };
-  reviews.push(newReview);
-  res.status(201).send(newReview);
+
+  try {
+    const newReview = new Review(req.body);
+    await newReview.save();
+    res.status(201).send(newReview);
+  } catch (err) {
+    res.status(500).send({ message: "error saving the review." });
+  }
 });
 
-app.put("/reviews/:id", (req, res) => {
+// update an existing review
+app.put("/reviews/:id", async (req, res) => {
   const { id } = req.params;
-  const { error } = reviewSchema.validate(req.body);
+
+  const { error } = Joi.object({
+    title: Joi.string().required(),
+    artist: Joi.string().required(),
+    reviewer: Joi.string().required(),
+    rating: Joi.number().min(1).max(5).required(),
+    review: Joi.string().required(),
+    picture: Joi.string().optional(),
+  }).validate(req.body);
+
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
   }
-  const reviewIndex = reviews.findIndex((review) => review.id == id);
-  if (reviewIndex === -1) {
-    return res.status(404).send({ message: "Review not found" });
+
+  try {
+    const updatedReview = await Review.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    if (!updatedReview) return res.status(404).send({ message: "review not found" });
+    res.send(updatedReview);
+  } catch (err) {
+    res.status(500).send({ message: "error updating the review." });
   }
-  reviews[reviewIndex] = { id: parseInt(id), ...req.body };
-  res.status(200).send(reviews[reviewIndex]);
 });
 
-app.delete("/reviews/:id", (req, res) => {
+// delete a review
+app.delete("/reviews/:id", async (req, res) => {
   const { id } = req.params;
-  const reviewIndex = reviews.findIndex((review) => review.id == id);
-  if (reviewIndex === -1) {
-    return res.status(404).send({ message: "Review not found" });
+
+  try {
+    const deletedReview = await Review.findByIdAndDelete(id);
+    if (!deletedReview) return res.status(404).send({ message: "review not found" });
+    res.send(deletedReview);
+  } catch (err) {
+    res.status(500).send({ message: "error deleting the review." });
   }
-  const deletedReview = reviews.splice(reviewIndex, 1);
-  res.status(200).send(deletedReview[0]);
 });
 
+// setup server port
 const PORT = process.env.PORT || 3001;
 
 if (!PORT) {
-  throw new Error("Environment variable PORT is not set. The server cannot start.");
+  throw new Error("environment variable port is not set. the server cannot start.");
 }
 
+// start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`server running on port ${PORT}`);
 });
