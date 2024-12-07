@@ -105,14 +105,19 @@ app.put("/reviews/:id", async (req, res) => {
 // delete a review
 app.delete("/reviews/:id", async (req, res) => {
   const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send({ message: "Invalid review ID." });
+  }
+
   try {
     const deletedReview = await Review.findByIdAndDelete(id);
     if (!deletedReview) {
-      return res.status(404).send({ message: "review not found." });
+      return res.status(404).send({ message: "Review not found." });
     }
     res.send(deletedReview);
   } catch (err) {
-    res.status(500).send({ message: "error deleting review." });
+    res.status(500).send({ message: "Error deleting review." });
   }
 });
 
