@@ -6,14 +6,15 @@ const cors = require("cors");
 const app = express();
 app.use(express.json());
 
+// cors configuration
 const corsOptions = {
   origin: "https://hciucci.github.io",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
-
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // connect to mongodb
 const mongoURI = "mongodb+srv://hadenmciucci:aVdwBFrOfjbEYLPF@cluster0.2zwpk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -75,6 +76,10 @@ app.post("/reviews", async (req, res) => {
 app.put("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).send({ message: "invalid review id." });
+  }
+
   const { error } = Joi.object({
     title: Joi.string().required(),
     artist: Joi.string().required(),
@@ -107,17 +112,17 @@ app.delete("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({ message: "Invalid review ID." });
+    return res.status(400).send({ message: "invalid review id." });
   }
 
   try {
     const deletedReview = await Review.findByIdAndDelete(id);
     if (!deletedReview) {
-      return res.status(404).send({ message: "Review not found." });
+      return res.status(404).send({ message: "review not found." });
     }
     res.send(deletedReview);
   } catch (err) {
-    res.status(500).send({ message: "Error deleting review." });
+    res.status(500).send({ message: "error deleting review." });
   }
 });
 
