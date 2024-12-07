@@ -16,7 +16,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // connect to mongodb
-const mongoURI = "your_mongo_connection_string_here";
+const mongoURI = "mongodb+srv://hadenmciucci:aVdwBFrOfjbEYLPF@cluster0.2zwpk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose
   .connect(mongoURI, {
     useNewUrlParser: true,
