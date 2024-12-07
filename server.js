@@ -42,10 +42,10 @@ const Review = mongoose.model("Review", reviewSchema);
 // get all reviews
 app.get("/reviews", async (req, res) => {
   try {
-    const reviews = await Review.find();
+    const reviews = await Review.find(); // Fetch only MongoDB reviews
     res.send(reviews);
   } catch (err) {
-    res.status(500).send({ message: "error fetching reviews." });
+    res.status(500).send({ message: "Error fetching reviews." });
   }
 });
 
