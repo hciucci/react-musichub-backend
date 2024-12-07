@@ -57,7 +57,7 @@ app.post("/reviews", async (req, res) => {
     reviewer: Joi.string().required(),
     rating: Joi.number().min(1).max(5).required(),
     review: Joi.string().required(),
-  }).validate(req.body);
+  }).validate(req.body, { allowUnknown: true }); // allow unknown fields like `_id`
 
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
@@ -86,7 +86,7 @@ app.put("/reviews/:id", async (req, res) => {
     reviewer: Joi.string().required(),
     rating: Joi.number().min(1).max(5).required(),
     review: Joi.string().required(),
-  }).validate(req.body);
+  }).validate(req.body, { allowUnknown: true }); // allow unknown fields like `_id`
 
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
