@@ -43,6 +43,7 @@ const Review = mongoose.model("Review", reviewSchema);
 
 // validation schema for Joi
 const reviewValidationSchema = Joi.object({
+  _id: Joi.string().optional(),
   title: Joi.string().required(),
   artist: Joi.string().required(),
   reviewer: Joi.string().required(),
