@@ -51,15 +51,18 @@ app.get("/reviews", async (req, res) => {
 
 // add a new review
 app.post("/reviews", async (req, res) => {
+  console.log("Received POST data:", req.body);
+
   const { error } = Joi.object({
     title: Joi.string().required(),
     artist: Joi.string().required(),
     reviewer: Joi.string().required(),
     rating: Joi.number().min(1).max(5).required(),
     review: Joi.string().required(),
-  }).validate(req.body, { allowUnknown: true }); // allow unknown fields like `_id`
+  }).validate(req.body, { allowUnknown: true });
 
   if (error) {
+    console.error("Validation error:", error.details[0].message);
     return res.status(400).send({ message: error.details[0].message });
   }
 
@@ -68,7 +71,8 @@ app.post("/reviews", async (req, res) => {
     await newReview.save();
     res.status(201).send(newReview);
   } catch (err) {
-    res.status(500).send({ message: "error saving review." });
+    console.error("Error saving review:", err.message);
+    res.status(500).send({ message: "Error saving review." });
   }
 });
 
